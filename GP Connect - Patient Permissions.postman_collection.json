@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "59f12e9a-3478-42af-abd7-9be69e325c9a",
+		"_postman_id": "2c6a32ea-ef60-4bfe-b665-fd223c3966e5",
 		"name": "GP Connect - Patient Permissions",
-		"description": "_Please read before running any tests_\n\n## Overview\n\n<img src=\"https://raw.githubusercontent.com/NHSDigital/gp-connect-user-permissions/master/specification/diagrams/overview.svg\">\n\nUse this API to list and manage the permissions a patient has to their  \nmedical record and a selection of services provided at their GP practice.\n\nYou can:\n\n- get a patient's permissions\n- request to update a patient's permissions to a higher level\n    \n\nYou cannot:\n\n- request to update a patient's permissions to a lower level\n    \n\nTo use this API, the end user must be a patient who is:\n\n- registered with the GP practice\n- registered with NHS login to P9 identity verification level\n    \n\nThis API allows you to manage the permissions for:\n\n- appointments\n- prescriptions\n- medical record\n    \n\nThis API is designed to respect the policy changes made in order to  \nallow patients to access their future medical record entries.  \nFor more details, see  \n[access to patient records through the NHS App](https://digital.nhs.uk/services/nhs-app/nhs-app-guidance-for-gp-practices/guidance-on-nhs-app-features/accelerating-patient-access-to-their-record).\n\n## Overview of the API automation framework\n\nThe purpose of this automation suite is to check that the data returned from the Patient Permissions API conforms to the specifications outlined in the documentation. The documentation can be found here:\n\n[https://digital.nhs.uk/developer/api-catalogue/gp-connect-patient-facing-user-permissions#overview--overview](https://digital.nhs.uk/developer/api-catalogue/gp-connect-patient-facing-user-permissions#overview--overview)\n\nThe tests are designed to test the entirety of this API without the need for manual testing. The only element they can not test is the date-time returned from the POST request as this will change for every request.\n\nPositive tests:\n\n- Can successfully increase a patient's permissions up to and including the max allowed for all 4 types of permissions (current medical record, historical medical record, appointments and prescriptions)\n    \n- Can successfully retrieve current and max allowed permissions for all 4 types for a patient\n    \n- Can retrieve all pending requests for increased permissions for a patient\n    \n- The response body from all of the above requests is correct\n    \n\nError tests:\n\n- Invalid or unfindable patient ids return an error\n- Invalid request body returns an error\n- A duplicate request for the same type of permission returns an error for all 4 types. Eg: a second request to increase appointment permissions for a patient when the first one is still pending returns an error\n    \n- A request to change permission to the same level as the patient's current permission returns an error, for all 4 types\n    \n- A request to change permission to below the patient's current permission returns an error, for all 4 types\n    \n\n## Why Postman\n\nPostman was chosen as the API testing application in order to simplify running, maintaining and developing the framework for both technically and non-technically minded people as the user interface makes it more accessible.\n\n## Installation\n\n- Install Postman, go to: [https://www.postman.com/downloads/](https://)\n- Download this test collection to your local PC\n- Open the collection using postman\n    \n\n## Structure\n\nThis is a relatively simple api with a single endpoint with 2 request types, GET (retrieve current permission for all types, retrieve maximum allowed permissions for all 4 types and retrieve pending requests) and POST (request for a permission level change). You would find the tests for the endpoint at: Patient > Id > Positive tests / Error tests. The actual tests can be found by clicking on any test file and looking under the 'Tests' header:\n\n<img src=\"https://content.pstmn.io/0021f01c-5c30-4a93-82cf-b6be9be76a14/aW1hZ2UucG5n\" width=\"504\" height=\"261\">\n\nAll tests are written in javascript. Each test is titled using BDD syntax using the 'Given', 'When', 'Then' format, as well as a small description above the test.\n\nAll test files will contain mostly similar tests. They include checking the headers returned are correct, the status code returned is as expected, as well as the schema (the structure of the data) is correct and the actual values themselves are correct.\n\n## Setup (IMPORTANT)\n\n_**Before running any tests you must change the following:**_\n\n- Change the baseUrl variable. The baseUrl is currently pointing towards the NHS sandbox environment. To run this against your own testing environment, the base url will need to be changed. To do this:\n    - select the collection\n    - from the top panel, select the 'Variables' option\n    - change the 'baseUrl' 'current value' to the one for your environment\n- You will need to seed data for these tests to work. As you can see from the variables tab from changing the baseUrl, there are 7 patients that will need to be added to your database, and their id's added to the variables (use same steps as for the base url, but replace the 'current value' from \"pleaseReplaceWith...etc\" to the patient ID in your database). The following data should be added for each patient:\n    \n    - **Patient 1, 2, 3, 4, 5, 6: SHOULD NOT HAVE ANY CURRENT PENDING REQUESTS. They should all have the following seeded data before running the tests:**\n        \n        - medicalRecord\n            \n            - current\n                \n                - accessLevel: none\n                    \n                - accessLevelMax: full\n                    \n            - historical\n                \n                - accessLevel: none\n                    \n                - accessLevelMax: full\n                    \n        - appointments\n            \n            - accessLevel: none\n                \n            - accessLevelMax: manage\n                \n        - prescriptions\n            \n            - accessLevel: none\n                \n            - accessLevelMax: manage\n                \n    - **Patient 7: SHOULD ALSO NOT HAVE ANY CURRENT PENDING REQUESTS: They should have the following:**\n        \n        - medicalRecord\n            \n            - current\n                \n                - accessLevel: summary\n                    \n                - accessLevelMax: detailed\n                    \n            - historical\n                \n                - accessLevel: summary\n                    \n                - accessLevelMax: detailed\n                    \n        - appointments\n            \n            - accessLevel: view\n                \n            - accessLevelMax: view\n                \n        - prescriptions\n            \n            - accessLevel: view\n                \n            - accessLevelMax: view\n                \n- Authentication token may need to be added to the header for the requests. This framework is not designed to test authentication, rather the shape of the returned data, and therefore does not implement authentication as it will be in production.\n    \n\n## After running tests (IMPORTANT)\n\nThis test framework is designed to assert the state of data based on the data setup above. Once you run the framework once, this will alter the original data and the tests would fail if run a second time. Therefore, **after every run of the tests, the DB should be returned back to the state described in the 'Setup' section above (the seeding section).**\n\n## Running one test\n\n- _Caution, whether you run just one test or the entire collection, you should always return the data back to how it is in the SETUP instructions after, otherwise subsequent tests may fail._\n    \n- Select a test you'd like to run from the left hand pannel, eg: MedicationRequest > Id > Positive tests > Get a specific planned medication request\n    \n- Press send\n    \n- Results will be displayed below:\n    \n\n<img src=\"https://content.pstmn.io/803f532b-f0e6-437e-a1be-5ac3dd4b6345/aW1hZ2UucG5n\" width=\"506\" height=\"292\">\n\n## Running the collection\n\n- Right click the collection from the left hand panel\n- Select 'Run collection'\n- Either leave all tests selected or select specific ones you'd like to run\n- Select to run manually as a one off or schedule to run them frequently\n- Select the orange 'run' button:\n    \n\n<img src=\"https://content.pstmn.io/ee02ccd9-7489-4678-8a05-bbebeb1f3631/aW1hZ2UucG5n\" width=\"448\" height=\"422\">\n\n- The tests will now run. The passed tests, failed tests, skipped tests, time taken to run etc... will be displayed at the top:\n    \n\n<img src=\"https://content.pstmn.io/bcbc390f-3694-496e-b95d-7fe7f130fd32/aW1hZ2UucG5n\" width=\"564\" height=\"186\">\n\n## Capturing evidence\n\nTo capture test evidence of the collection run, the following needs to be done:\n\n- Right click the collection from the left hand panel\n- Select 'Run collection'\n- **Check 'Persist responses for a session'**\n- Select the orange 'run' button:\n    \n\n<img src=\"https://content.pstmn.io/dd7a086d-a346-4349-853b-a596fe2e775b/aW1hZ2UucG5n\" width=\"394\" height=\"432\">\n\n- Once the run has finished you should see 'Export results' in top right:\n    \n\n<img src=\"https://content.pstmn.io/30f06127-a645-4ddf-9cc9-6a8ff6da2d73/aW1hZ2UucG5n\" width=\"514\" height=\"111\">\n\n- Select this to download the results\n- As well as this, you will need to capture the requests sent for each request\n- Select each request in turn. Eg click on this request:\n    \n\n<img src=\"https://content.pstmn.io/ea9e567f-37e5-4ea5-a661-ceb57b6d57c3/aW1hZ2UucG5n\" width=\"476\" height=\"186\">\n\n- The following will appear with a response and request header:\n    \n\n<img src=\"https://content.pstmn.io/483c360e-917b-458e-9d73-489194763122/aW1hZ2UucG5n\" width=\"408\" height=\"483\">\n\n- Copy the content of both the response AND request into a text document, clearly labelled with the name of the request\n- Do this for each request sent\n- You will now have a file with the request and response for each request in text format as well as the downloaded file in json format as evidence\n    \n\n## Further help\n\nIf you'd like further help on using postman, visit the Postman learning centre: [https://learning.postman.com/docs/introduction/overview/](https://)",
+		"description": "_Please read before running any tests_\n\n## Overview\n\n<img src=\"https://raw.githubusercontent.com/NHSDigital/gp-connect-user-permissions/master/specification/diagrams/overview.svg\">\n\nUse this API to list and manage the permissions a patient has to their  \nmedical record and a selection of services provided at their GP practice.\n\nYou can:\n\n- get a patient's permissions\n- request to update a patient's permissions to a higher level\n    \n\nYou cannot:\n\n- request to update a patient's permissions to a lower level\n    \n\nTo use this API, the end user must be a patient who is:\n\n- registered with the GP practice\n- registered with NHS login to P9 identity verification level\n    \n\nThis API allows you to manage the permissions for:\n\n- appointments\n- prescriptions\n- medical record\n    \n\nThis API is designed to respect the policy changes made in order to  \nallow patients to access their future medical record entries.  \nFor more details, see  \n[access to patient records through the NHS App](https://digital.nhs.uk/services/nhs-app/nhs-app-guidance-for-gp-practices/guidance-on-nhs-app-features/accelerating-patient-access-to-their-record).\n\n## Overview of the API automation framework\n\nThe purpose of this automation suite is to check that the data returned from the Patient Permissions API conforms to the specifications outlined in the documentation. The documentation can be found here:\n\n[https://digital.nhs.uk/developer/api-catalogue/gp-connect-patient-facing-user-permissions#overview--overview](https://digital.nhs.uk/developer/api-catalogue/gp-connect-patient-facing-user-permissions#overview--overview)\n\nThe tests are designed to test the entirety of this API without the need for manual testing. The only element they can not test is the date-time returned from the POST request as this will change for every request.\n\nPositive tests:\n\n- Can successfully increase a patient's permissions up to and including the max allowed for all 4 types of permissions (current medical record, historical medical record, appointments and prescriptions)\n- Can successfully retrieve current and max allowed permissions for all 4 types for a patient\n- Can retrieve all pending requests for increased permissions for a patient\n- The response body from all of the above requests is correct\n    \n\nError tests:\n\n- Invalid or unfindable patient ids return an error\n- Invalid request body returns an error\n- A duplicate request for the same type of permission returns an error for all 4 types. Eg: a second request to increase appointment permissions for a patient when the first one is still pending returns an error\n- A request to change permission to the same level as the patient's current permission returns an error, for all 4 types\n- A request to change permission to below the patient's current permission returns an error, for all 4 types\n    \n\n## Why Postman\n\nPostman was chosen as the API testing application in order to simplify running, maintaining and developing the framework for both technically and non-technically minded people as the user interface makes it more accessible.\n\n## Installation\n\n- Install Postman, go to: [https://www.postman.com/downloads/](https://)\n- Download this test collection to your local PC\n- Open the collection using postman\n    \n\n## Structure\n\nThis is a relatively simple api with a single endpoint with 2 request types, GET (retrieve current permission for all types, retrieve maximum allowed permissions for all 4 types and retrieve pending requests) and POST (request for a permission level change). You would find the tests for the endpoint at: Patient > Id > Positive tests / Error tests. The actual tests can be found by clicking on any test file and looking under the 'Tests' header:\n\n<img src=\"https://content.pstmn.io/0021f01c-5c30-4a93-82cf-b6be9be76a14/aW1hZ2UucG5n\" width=\"504\" height=\"261\">\n\nAll tests are written in javascript. Each test is titled using BDD syntax using the 'Given', 'When', 'Then' format, as well as a small description above the test.\n\nAll test files will contain mostly similar tests. They include checking the headers returned are correct, the status code returned is as expected, as well as the schema (the structure of the data) is correct and the actual values themselves are correct.\n\n## Setup (IMPORTANT)\n\n_**Before running any tests you must change the following:**_\n\n- Change the baseUrl variable. The baseUrl is currently pointing towards the NHS sandbox environment. To run this against your own testing environment, the base url will need to be changed. To do this:\n    - select the collection\n    - from the top panel, select the 'Variables' option\n    - change the 'baseUrl' 'current value' to the one for your environment\n- You will need to seed data for these tests to work. As you can see from the variables tab from changing the baseUrl, there are 7 patients that will need to be added to your database, and their id's added to the variables (use same steps as for the base url, but replace the 'current value' from \"pleaseReplaceWith...etc\" to the patient ID in your database). The following data should be added for each patient:\n    \n    - **Patient 1, 2, 3, 4, 5, 6: SHOULD NOT HAVE ANY CURRENT PENDING REQUESTS. They should all have the following seeded data before running the tests:**\n        - medicalRecord\n            - current\n                - accessLevel: none\n                - accessLevelMax: full\n            - historical\n                - accessLevel: none\n                - accessLevelMax: full\n        - appointments\n            - accessLevel: none\n            - accessLevelMax: manage\n        - prescriptions\n            - accessLevel: none\n            - accessLevelMax: manage\n    - **Patient 7: SHOULD ALSO NOT HAVE ANY CURRENT PENDING REQUESTS: They should have the following:**\n        \n        - medicalRecord\n            - current\n                - accessLevel: summary\n                - accessLevelMax: detailed\n            - historical\n                - accessLevel: summary\n                - accessLevelMax: detailed\n        - appointments\n            - accessLevel: view\n            - accessLevelMax: view\n        - prescriptions\n            \n            - accessLevel: view\n                \n    - **Patient 8: SHOULD BE INACTIVE**\n        \n    - **Patient 9: SHOULD BE DECEASED**\n        \n- Authentication token may need to be added to the header for the requests. This framework is not designed to test authentication, rather the shape of the returned data, and therefore does not implement authentication as it will be in production.\n    \n\n## After running tests (IMPORTANT)\n\nThis test framework is designed to assert the state of data based on the data setup above. Once you run the framework once, this will alter the original data and the tests would fail if run a second time. Therefore, **after every run of the tests, the DB should be returned back to the state described in the 'Setup' section above (the seeding section).**\n\n## Running one test\n\n- _Caution, whether you run just one test or the entire collection, you should always return the data back to how it is in the SETUP instructions after, otherwise subsequent tests may fail._\n- Select a test you'd like to run from the left hand pannel, eg: MedicationRequest > Id > Positive tests > Get a specific planned medication request\n- Press send\n- Results will be displayed below:\n    \n\n<img src=\"https://content.pstmn.io/803f532b-f0e6-437e-a1be-5ac3dd4b6345/aW1hZ2UucG5n\" width=\"506\" height=\"292\">\n\n## Running the collection\n\n- Right click the collection from the left hand panel\n- Select 'Run collection'\n- Either leave all tests selected or select specific ones you'd like to run\n- Select to run manually as a one off or schedule to run them frequently\n- Select the orange 'run' button:\n    \n\n<img src=\"https://content.pstmn.io/ee02ccd9-7489-4678-8a05-bbebeb1f3631/aW1hZ2UucG5n\" width=\"448\" height=\"422\">\n\n- The tests will now run. The passed tests, failed tests, skipped tests, time taken to run etc... will be displayed at the top:\n    \n\n<img src=\"https://content.pstmn.io/bcbc390f-3694-496e-b95d-7fe7f130fd32/aW1hZ2UucG5n\" width=\"564\" height=\"186\">\n\n## Capturing evidence\n\nTo capture test evidence of the collection run, the following needs to be done:\n\n- Right click the collection from the left hand panel\n- Select 'Run collection'\n- **Check 'Persist responses for a session'**\n- Select the orange 'run' button:\n    \n\n<img src=\"https://content.pstmn.io/dd7a086d-a346-4349-853b-a596fe2e775b/aW1hZ2UucG5n\" width=\"394\" height=\"432\">\n\n- Once the run has finished you should see 'Export results' in top right:\n    \n\n<img src=\"https://content.pstmn.io/30f06127-a645-4ddf-9cc9-6a8ff6da2d73/aW1hZ2UucG5n\" width=\"514\" height=\"111\">\n\n- Select this to download the results\n- As well as this, you will need to capture the requests sent for each request\n- Select each request in turn. Eg click on this request:\n    \n\n<img src=\"https://content.pstmn.io/ea9e567f-37e5-4ea5-a661-ceb57b6d57c3/aW1hZ2UucG5n\" width=\"476\" height=\"186\">\n\n- The following will appear with a response and request header:\n    \n\n<img src=\"https://content.pstmn.io/483c360e-917b-458e-9d73-489194763122/aW1hZ2UucG5n\" width=\"408\" height=\"483\">\n\n- Copy the content of both the response AND request into a text document, clearly labelled with the name of the request\n- Do this for each request sent\n- You will now have a file with the request and response for each request in text format as well as the downloaded file in json format as evidence\n    \n\n## Further help\n\nIf you'd like further help on using postman, visit the Postman learning centre: [https://learning.postman.com/docs/introduction/overview/](https://)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "10104196"
+		"_exporter_id": "30594351"
 	},
 	"item": [
 		{
@@ -24,7 +24,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -148,7 +148,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -272,7 +272,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -396,7 +396,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -520,7 +520,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -644,7 +644,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -768,7 +768,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -892,7 +892,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -1016,7 +1016,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -1142,7 +1142,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -1268,7 +1268,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -1394,7 +1394,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -1520,7 +1520,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -1903,7 +1903,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -2281,7 +2281,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -2633,7 +2633,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -2985,7 +2985,7 @@
 											"script": {
 												"exec": [
 													"//Verify the response status code\r",
-													"pm.test(\"GIVEN I provide an existing valid practitioner role ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
+													"pm.test(\"GIVEN I provide an existing valid patient ID, WHEN I send the request, THEN the status code response is 200\", () => {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
@@ -3509,6 +3509,213 @@
 											"path": [
 												"Patient",
 												"0123456789"
+											]
+										},
+										"description": "Use this endpoint to get specific MedicationRequests.\n\nThe request must include the following parameter:\n\n* id\n"
+									},
+									"response": []
+								},
+								{
+									"name": "Error: Patient id does not match any on record inactive- 404 PATIENT_NOT_FOUND",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var jsonData = pm.response.json();\r",
+													"\r",
+													"//Verify the response status code\r",
+													"pm.test(\"GIVEN I send an incorrect request, WHEN I send the request, THEN the status code response is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Correlation-ID\r",
+													"pm.test(\"GIVEN I provide an X-Correlation-ID in the header, WHEN I send the request, THEN the same X-Correlation-ID is returned in the response header\", function () {\r",
+													"    var XCorrelationID = pm.variables.get(\"X-Correlation-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Correlation-ID\")).to.eql(XCorrelationID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Request-ID\r",
+													"pm.test(\"GIVEN I provide an X-Request-ID in the header, WHEN I send the request, THEN the same X-Request-ID is returned in the response header\", function () {\r",
+													"    var XRequestID = pm.variables.get(\"X-Request-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Request-ID\")).to.eql(XRequestID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header content-type\r",
+													"pm.test(\"GIVEN I send a request, WHEN the response is returned, THEN the content-type in the header is set to 'application/json'\", () => {\r",
+													"    pm.expect(pm.response.headers.get('CONTENT-TYPE')).to.eql('application/json')\r",
+													"});\r",
+													"\r",
+													"//Verify response schema\r",
+													"pm.test(\"GIVEN I send a MedicationRequest with an ID that doesn't exist, WHEN the response is returned, THEN the json error response corresponds to the required MedicationRequest schema\", () => {\r",
+													"    var schema = {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"resourceType\": {\r",
+													"                \"type\": \"string\",\r",
+													"                \"const\": \"OperationOutcome\"\r",
+													"            },\r",
+													"            \"id\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"meta\": {\r",
+													"                \"type\": \"object\",\r",
+													"                \"properties\": {\r",
+													"                    \"profile\": {\r",
+													"                        \"type\": \"array\",\r",
+													"                        \"minItems\": 1,\r",
+													"                        \"maxItems\": 1,\r",
+													"                        \"items\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"const\": \"https://fhir.hl7.org.uk/StructureDefinition/UKCore-OperationOutcome\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\"profile\"]\r",
+													"            },\r",
+													"            \"issue\": {\r",
+													"                \"type\": \"array\",\r",
+													"                \"items\": {\r",
+													"                    \"properties\": {\r",
+													"                        \"id\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"severity\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"fatal\",\r",
+													"                                \"error\",\r",
+													"                                \"warning\",\r",
+													"                                \"information\"\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"code\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"invalid\",\r",
+													"                                \"structure\",\r",
+													"                                \"required\",\r",
+													"                                \"value\",\r",
+													"                                \"invariant\",\r",
+													"                                \"security\",\r",
+													"                                \"login\",\r",
+													"                                \"unknown\",\r",
+													"                                \"expired\",\r",
+													"                                \"forbidden\",\r",
+													"                                \"suppressed\",\r",
+													"                                \"processing\",\r",
+													"                                \"not-supported\",\r",
+													"                                \"duplicate\",\r",
+													"                                \"not-found\",\r",
+													"                                \"too-long\",\r",
+													"                                \"code-invalid\",\r",
+													"                                \"extension\",\r",
+													"                                \"too-costly\",\r",
+													"                                \"business-rule\",\r",
+													"                                \"conflict\",\r",
+													"                                \"incomplete\",\r",
+													"                                \"transient\",\r",
+													"                                \"lock-error\",\r",
+													"                                \"no-store\",\r",
+													"                                \"exception\",\r",
+													"                                \"timeout\",\r",
+													"                                \"throttled\",\r",
+													"                                \"informational\",\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"details\": {\r",
+													"                            \"type\": \"object\",\r",
+													"                            \"properties\": {\r",
+													"                                \"coding\": {\r",
+													"                                    \"type\": \"array\",\r",
+													"                                    \"minItems\": 1,\r",
+													"                                    \"items\": {\r",
+													"                                        \"properties\": {\r",
+													"                                            \"system\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            },\r",
+													"                                            \"code\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                                \"const\" : \"PATIENT_NOT_FOUND\",\r",
+													"                                            },\r",
+													"                                            \"display\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            }\r",
+													"                                        },\r",
+													"                                        \"required\": [\r",
+													"                                            \"system\",\r",
+													"                                            \"code\",\r",
+													"                                            \"display\"\r",
+													"                                        ]\r",
+													"                                    }\r",
+													"                                }\r",
+													"                            }\r",
+													"                        },\r",
+													"                        \"diagnostics\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"expression\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\r",
+													"                    \"severity\",\r",
+													"                    \"code\",\r",
+													"                ]\r",
+													"            }\r",
+													"        },\r",
+													"        \"required\": [\r",
+													"            \"resourceType\",\r",
+													"            \"meta\",\r",
+													"            \"issue\"\r",
+													"        ]\r",
+													"    }\r",
+													"    pm.response.to.have.jsonSchema(schema);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "noauth"
+										},
+										"method": "GET",
+										"header": [
+											{
+												"description": "An optional ID which you can use to track transactions across multiple systems. It can have any value, but we recommend avoiding `.` characters.\nMirrored back in a response header.\n",
+												"key": "X-Correlation-ID",
+												"value": "{{X-Correlation-ID}}"
+											},
+											{
+												"description": "(Required) A globally unique identifier (GUID) for the request, which we use to de-duplicate repeated requests and to trace the request if you contact our helpdesk.\nMust be a universally unique identifier (UUID) (ideally version 4).\n\nMirrored back in a response header.\n\nIf you re-send a failed request, use the same value in this header.\n\nRequired in all environments except sandbox.\n",
+												"key": "X-Request-ID",
+												"value": "{{X-Request-ID}}"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/Patient/{{patient_8_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"Patient",
+												"{{patient_8_id}}"
 											]
 										},
 										"description": "Use this endpoint to get specific MedicationRequests.\n\nThe request must include the following parameter:\n\n* id\n"
@@ -4343,6 +4550,858 @@
 											"path": [
 												"Patient",
 												"{{patient_6_id}}"
+											]
+										},
+										"description": "## Overview\n\nRequest a change to the permission a patient has for their medical\nrecord or services provided by the GP practice.\n\nOnce you submit a request, it waits in a queue to be processed by a\nhealthcare worker. Exactly when this will happen is unpredictable.\n\nThe response to getting patient permissions contains information on\npending requests. Once the request is processed it is no longer\nincluded in pending requests.\n\nIf you like, you can share this information with the patient to help\nset their expectations.\n\n## Use cases\n\nUse cases covered by this endpoint include the patient requesting:\n\n* additional access to the appointments\n* additional access to the prescriptions\n* additional access to their current medical record\n* detailed coded record access to their historical medical record\n\n## Request workflow\n\nWhen a request is made, if it is accepted, it is added to the GP\nsystem's workflow and processed at some point in the future. Responses\nto these requests have a state of pending.\n\nRejected requests are not added to the GP system's\nworkflow. The message included in the response to a rejected request\nexplains the reason for the rejection. This should be displayed to\nthe patient.\n\n## Request handling\n\nIf a request is a duplicate, it is deduplicated by\nthe GP system, with the original request being preserved.\n\nIf multiple requests are made (and accepted) they are combined\nwithin the workflow and reviewed together by a healthcare worker.\n"
+									},
+									"response": []
+								},
+								{
+									"name": "Error: Patient id does not match any on record - 404 PATIENT_NOT_FOUND",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var jsonData = pm.response.json();\r",
+													"\r",
+													"//Verify the response status code\r",
+													"pm.test(\"GIVEN I send an incorrect request, WHEN I send the request, THEN the status code response is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Correlation-ID\r",
+													"pm.test(\"GIVEN I provide an X-Correlation-ID in the header, WHEN I send the request, THEN the same X-Correlation-ID is returned in the response header\", function () {\r",
+													"    var XCorrelationID = pm.variables.get(\"X-Correlation-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Correlation-ID\")).to.eql(XCorrelationID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Request-ID\r",
+													"pm.test(\"GIVEN I provide an X-Request-ID in the header, WHEN I send the request, THEN the same X-Request-ID is returned in the response header\", function () {\r",
+													"    var XRequestID = pm.variables.get(\"X-Request-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Request-ID\")).to.eql(XRequestID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header content-type\r",
+													"pm.test(\"GIVEN I send a request, WHEN the response is returned, THEN the content-type in the header is set to 'application/json'\", () => {\r",
+													"    pm.expect(pm.response.headers.get('CONTENT-TYPE')).to.eql('application/json')\r",
+													"});\r",
+													"\r",
+													"//Verify response schema\r",
+													"pm.test(\"GIVEN I send a MedicationRequest with an ID that doesn't exist, WHEN the response is returned, THEN the json error response corresponds to the required MedicationRequest schema\", () => {\r",
+													"    var schema = {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"resourceType\": {\r",
+													"                \"type\": \"string\",\r",
+													"                \"const\": \"OperationOutcome\"\r",
+													"            },\r",
+													"            \"id\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"meta\": {\r",
+													"                \"type\": \"object\",\r",
+													"                \"properties\": {\r",
+													"                    \"profile\": {\r",
+													"                        \"type\": \"array\",\r",
+													"                        \"minItems\": 1,\r",
+													"                        \"maxItems\": 1,\r",
+													"                        \"items\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"const\": \"https://fhir.hl7.org.uk/StructureDefinition/UKCore-OperationOutcome\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\"profile\"]\r",
+													"            },\r",
+													"            \"issue\": {\r",
+													"                \"type\": \"array\",\r",
+													"                \"items\": {\r",
+													"                    \"properties\": {\r",
+													"                        \"id\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"severity\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"fatal\",\r",
+													"                                \"error\",\r",
+													"                                \"warning\",\r",
+													"                                \"information\"\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"code\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"invalid\",\r",
+													"                                \"structure\",\r",
+													"                                \"required\",\r",
+													"                                \"value\",\r",
+													"                                \"invariant\",\r",
+													"                                \"security\",\r",
+													"                                \"login\",\r",
+													"                                \"unknown\",\r",
+													"                                \"expired\",\r",
+													"                                \"forbidden\",\r",
+													"                                \"suppressed\",\r",
+													"                                \"processing\",\r",
+													"                                \"not-supported\",\r",
+													"                                \"duplicate\",\r",
+													"                                \"not-found\",\r",
+													"                                \"too-long\",\r",
+													"                                \"code-invalid\",\r",
+													"                                \"extension\",\r",
+													"                                \"too-costly\",\r",
+													"                                \"business-rule\",\r",
+													"                                \"conflict\",\r",
+													"                                \"incomplete\",\r",
+													"                                \"transient\",\r",
+													"                                \"lock-error\",\r",
+													"                                \"no-store\",\r",
+													"                                \"exception\",\r",
+													"                                \"timeout\",\r",
+													"                                \"throttled\",\r",
+													"                                \"informational\",\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"details\": {\r",
+													"                            \"type\": \"object\",\r",
+													"                            \"properties\": {\r",
+													"                                \"coding\": {\r",
+													"                                    \"type\": \"array\",\r",
+													"                                    \"minItems\": 1,\r",
+													"                                    \"items\": {\r",
+													"                                        \"properties\": {\r",
+													"                                            \"system\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            },\r",
+													"                                            \"code\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                                \"const\": \"UNSUPPORTED_VALUE\",\r",
+													"                                            },\r",
+													"                                            \"display\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            }\r",
+													"                                        },\r",
+													"                                        \"required\": [\r",
+													"                                            \"system\",\r",
+													"                                            \"code\",\r",
+													"                                            \"display\"\r",
+													"                                        ]\r",
+													"                                    }\r",
+													"                                },\r",
+													"                            },\r",
+													"                        },\r",
+													"                        \"diagnostics\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"expression\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\r",
+													"                    \"severity\",\r",
+													"                    \"code\",\r",
+													"                ]\r",
+													"            }\r",
+													"        },\r",
+													"        \"required\": [\r",
+													"            \"resourceType\",\r",
+													"            \"meta\",\r",
+													"            \"issue\"\r",
+													"        ]\r",
+													"    }\r",
+													"    pm.response.to.have.jsonSchema(schema);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "{{X-Request-ID}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "{{X-Correlation-ID}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"permissionType\": \"medicalRecord\",\r\n  \"medicalRecordType\": \"current\",\r\n  \"accessLevel\": \"documents\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/Patient/0123456789",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"Patient",
+												"0123456789"
+											]
+										},
+										"description": "## Overview\n\nRequest a change to the permission a patient has for their medical\nrecord or services provided by the GP practice.\n\nOnce you submit a request, it waits in a queue to be processed by a\nhealthcare worker. Exactly when this will happen is unpredictable.\n\nThe response to getting patient permissions contains information on\npending requests. Once the request is processed it is no longer\nincluded in pending requests.\n\nIf you like, you can share this information with the patient to help\nset their expectations.\n\n## Use cases\n\nUse cases covered by this endpoint include the patient requesting:\n\n* additional access to the appointments\n* additional access to the prescriptions\n* additional access to their current medical record\n* detailed coded record access to their historical medical record\n\n## Request workflow\n\nWhen a request is made, if it is accepted, it is added to the GP\nsystem's workflow and processed at some point in the future. Responses\nto these requests have a state of pending.\n\nRejected requests are not added to the GP system's\nworkflow. The message included in the response to a rejected request\nexplains the reason for the rejection. This should be displayed to\nthe patient.\n\n## Request handling\n\nIf a request is a duplicate, it is deduplicated by\nthe GP system, with the original request being preserved.\n\nIf multiple requests are made (and accepted) they are combined\nwithin the workflow and reviewed together by a healthcare worker.\n"
+									},
+									"response": []
+								},
+								{
+									"name": "Error: Patient id does not match any on record  inactive - 404 PATIENT_NOT_FOUND",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var jsonData = pm.response.json();\r",
+													"\r",
+													"//Verify the response status code\r",
+													"pm.test(\"GIVEN I send an incorrect request, WHEN I send the request, THEN the status code response is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Correlation-ID\r",
+													"pm.test(\"GIVEN I provide an X-Correlation-ID in the header, WHEN I send the request, THEN the same X-Correlation-ID is returned in the response header\", function () {\r",
+													"    var XCorrelationID = pm.variables.get(\"X-Correlation-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Correlation-ID\")).to.eql(XCorrelationID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Request-ID\r",
+													"pm.test(\"GIVEN I provide an X-Request-ID in the header, WHEN I send the request, THEN the same X-Request-ID is returned in the response header\", function () {\r",
+													"    var XRequestID = pm.variables.get(\"X-Request-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Request-ID\")).to.eql(XRequestID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header content-type\r",
+													"pm.test(\"GIVEN I send a request, WHEN the response is returned, THEN the content-type in the header is set to 'application/json'\", () => {\r",
+													"    pm.expect(pm.response.headers.get('CONTENT-TYPE')).to.eql('application/json')\r",
+													"});\r",
+													"\r",
+													"//Verify response schema\r",
+													"pm.test(\"GIVEN I send a MedicationRequest with an ID that doesn't exist, WHEN the response is returned, THEN the json error response corresponds to the required MedicationRequest schema\", () => {\r",
+													"    var schema = {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"resourceType\": {\r",
+													"                \"type\": \"string\",\r",
+													"                \"const\": \"OperationOutcome\"\r",
+													"            },\r",
+													"            \"id\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"meta\": {\r",
+													"                \"type\": \"object\",\r",
+													"                \"properties\": {\r",
+													"                    \"profile\": {\r",
+													"                        \"type\": \"array\",\r",
+													"                        \"minItems\": 1,\r",
+													"                        \"maxItems\": 1,\r",
+													"                        \"items\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"const\": \"https://fhir.hl7.org.uk/StructureDefinition/UKCore-OperationOutcome\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\"profile\"]\r",
+													"            },\r",
+													"            \"issue\": {\r",
+													"                \"type\": \"array\",\r",
+													"                \"items\": {\r",
+													"                    \"properties\": {\r",
+													"                        \"id\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"severity\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"fatal\",\r",
+													"                                \"error\",\r",
+													"                                \"warning\",\r",
+													"                                \"information\"\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"code\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"invalid\",\r",
+													"                                \"structure\",\r",
+													"                                \"required\",\r",
+													"                                \"value\",\r",
+													"                                \"invariant\",\r",
+													"                                \"security\",\r",
+													"                                \"login\",\r",
+													"                                \"unknown\",\r",
+													"                                \"expired\",\r",
+													"                                \"forbidden\",\r",
+													"                                \"suppressed\",\r",
+													"                                \"processing\",\r",
+													"                                \"not-supported\",\r",
+													"                                \"duplicate\",\r",
+													"                                \"not-found\",\r",
+													"                                \"too-long\",\r",
+													"                                \"code-invalid\",\r",
+													"                                \"extension\",\r",
+													"                                \"too-costly\",\r",
+													"                                \"business-rule\",\r",
+													"                                \"conflict\",\r",
+													"                                \"incomplete\",\r",
+													"                                \"transient\",\r",
+													"                                \"lock-error\",\r",
+													"                                \"no-store\",\r",
+													"                                \"exception\",\r",
+													"                                \"timeout\",\r",
+													"                                \"throttled\",\r",
+													"                                \"informational\",\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"details\": {\r",
+													"                            \"type\": \"object\",\r",
+													"                            \"properties\": {\r",
+													"                                \"coding\": {\r",
+													"                                    \"type\": \"array\",\r",
+													"                                    \"minItems\": 1,\r",
+													"                                    \"items\": {\r",
+													"                                        \"properties\": {\r",
+													"                                            \"system\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            },\r",
+													"                                            \"code\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                                \"const\": \"UNSUPPORTED_VALUE\",\r",
+													"                                            },\r",
+													"                                            \"display\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            }\r",
+													"                                        },\r",
+													"                                        \"required\": [\r",
+													"                                            \"system\",\r",
+													"                                            \"code\",\r",
+													"                                            \"display\"\r",
+													"                                        ]\r",
+													"                                    }\r",
+													"                                },\r",
+													"                            },\r",
+													"                        },\r",
+													"                        \"diagnostics\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"expression\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\r",
+													"                    \"severity\",\r",
+													"                    \"code\",\r",
+													"                ]\r",
+													"            }\r",
+													"        },\r",
+													"        \"required\": [\r",
+													"            \"resourceType\",\r",
+													"            \"meta\",\r",
+													"            \"issue\"\r",
+													"        ]\r",
+													"    }\r",
+													"    pm.response.to.have.jsonSchema(schema);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "{{X-Request-ID}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "{{X-Correlation-ID}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"permissionType\": \"medicalRecord\",\r\n  \"medicalRecordType\": \"current\",\r\n  \"accessLevel\": \"documents\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/Patient/{{patient_8_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"Patient",
+												"{{patient_8_id}}"
+											]
+										},
+										"description": "## Overview\n\nRequest a change to the permission a patient has for their medical\nrecord or services provided by the GP practice.\n\nOnce you submit a request, it waits in a queue to be processed by a\nhealthcare worker. Exactly when this will happen is unpredictable.\n\nThe response to getting patient permissions contains information on\npending requests. Once the request is processed it is no longer\nincluded in pending requests.\n\nIf you like, you can share this information with the patient to help\nset their expectations.\n\n## Use cases\n\nUse cases covered by this endpoint include the patient requesting:\n\n* additional access to the appointments\n* additional access to the prescriptions\n* additional access to their current medical record\n* detailed coded record access to their historical medical record\n\n## Request workflow\n\nWhen a request is made, if it is accepted, it is added to the GP\nsystem's workflow and processed at some point in the future. Responses\nto these requests have a state of pending.\n\nRejected requests are not added to the GP system's\nworkflow. The message included in the response to a rejected request\nexplains the reason for the rejection. This should be displayed to\nthe patient.\n\n## Request handling\n\nIf a request is a duplicate, it is deduplicated by\nthe GP system, with the original request being preserved.\n\nIf multiple requests are made (and accepted) they are combined\nwithin the workflow and reviewed together by a healthcare worker.\n"
+									},
+									"response": []
+								},
+								{
+									"name": "Error: Patient id does not match any on record  deceased- 404 PATIENT_NOT_FOUND",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var jsonData = pm.response.json();\r",
+													"\r",
+													"//Verify the response status code\r",
+													"pm.test(\"GIVEN I send an incorrect request, WHEN I send the request, THEN the status code response is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Correlation-ID\r",
+													"pm.test(\"GIVEN I provide an X-Correlation-ID in the header, WHEN I send the request, THEN the same X-Correlation-ID is returned in the response header\", function () {\r",
+													"    var XCorrelationID = pm.variables.get(\"X-Correlation-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Correlation-ID\")).to.eql(XCorrelationID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Request-ID\r",
+													"pm.test(\"GIVEN I provide an X-Request-ID in the header, WHEN I send the request, THEN the same X-Request-ID is returned in the response header\", function () {\r",
+													"    var XRequestID = pm.variables.get(\"X-Request-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Request-ID\")).to.eql(XRequestID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header content-type\r",
+													"pm.test(\"GIVEN I send a request, WHEN the response is returned, THEN the content-type in the header is set to 'application/json'\", () => {\r",
+													"    pm.expect(pm.response.headers.get('CONTENT-TYPE')).to.eql('application/json')\r",
+													"});\r",
+													"\r",
+													"//Verify response schema\r",
+													"pm.test(\"GIVEN I send a MedicationRequest with an ID that doesn't exist, WHEN the response is returned, THEN the json error response corresponds to the required MedicationRequest schema\", () => {\r",
+													"    var schema = {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"resourceType\": {\r",
+													"                \"type\": \"string\",\r",
+													"                \"const\": \"OperationOutcome\"\r",
+													"            },\r",
+													"            \"id\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"meta\": {\r",
+													"                \"type\": \"object\",\r",
+													"                \"properties\": {\r",
+													"                    \"profile\": {\r",
+													"                        \"type\": \"array\",\r",
+													"                        \"minItems\": 1,\r",
+													"                        \"maxItems\": 1,\r",
+													"                        \"items\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"const\": \"https://fhir.hl7.org.uk/StructureDefinition/UKCore-OperationOutcome\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\"profile\"]\r",
+													"            },\r",
+													"            \"issue\": {\r",
+													"                \"type\": \"array\",\r",
+													"                \"items\": {\r",
+													"                    \"properties\": {\r",
+													"                        \"id\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"severity\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"fatal\",\r",
+													"                                \"error\",\r",
+													"                                \"warning\",\r",
+													"                                \"information\"\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"code\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"invalid\",\r",
+													"                                \"structure\",\r",
+													"                                \"required\",\r",
+													"                                \"value\",\r",
+													"                                \"invariant\",\r",
+													"                                \"security\",\r",
+													"                                \"login\",\r",
+													"                                \"unknown\",\r",
+													"                                \"expired\",\r",
+													"                                \"forbidden\",\r",
+													"                                \"suppressed\",\r",
+													"                                \"processing\",\r",
+													"                                \"not-supported\",\r",
+													"                                \"duplicate\",\r",
+													"                                \"not-found\",\r",
+													"                                \"too-long\",\r",
+													"                                \"code-invalid\",\r",
+													"                                \"extension\",\r",
+													"                                \"too-costly\",\r",
+													"                                \"business-rule\",\r",
+													"                                \"conflict\",\r",
+													"                                \"incomplete\",\r",
+													"                                \"transient\",\r",
+													"                                \"lock-error\",\r",
+													"                                \"no-store\",\r",
+													"                                \"exception\",\r",
+													"                                \"timeout\",\r",
+													"                                \"throttled\",\r",
+													"                                \"informational\",\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"details\": {\r",
+													"                            \"type\": \"object\",\r",
+													"                            \"properties\": {\r",
+													"                                \"coding\": {\r",
+													"                                    \"type\": \"array\",\r",
+													"                                    \"minItems\": 1,\r",
+													"                                    \"items\": {\r",
+													"                                        \"properties\": {\r",
+													"                                            \"system\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            },\r",
+													"                                            \"code\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                                \"const\": \"UNSUPPORTED_VALUE\",\r",
+													"                                            },\r",
+													"                                            \"display\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            }\r",
+													"                                        },\r",
+													"                                        \"required\": [\r",
+													"                                            \"system\",\r",
+													"                                            \"code\",\r",
+													"                                            \"display\"\r",
+													"                                        ]\r",
+													"                                    }\r",
+													"                                },\r",
+													"                            },\r",
+													"                        },\r",
+													"                        \"diagnostics\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"expression\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\r",
+													"                    \"severity\",\r",
+													"                    \"code\",\r",
+													"                ]\r",
+													"            }\r",
+													"        },\r",
+													"        \"required\": [\r",
+													"            \"resourceType\",\r",
+													"            \"meta\",\r",
+													"            \"issue\"\r",
+													"        ]\r",
+													"    }\r",
+													"    pm.response.to.have.jsonSchema(schema);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "{{X-Request-ID}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "{{X-Correlation-ID}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"permissionType\": \"medicalRecord\",\r\n  \"medicalRecordType\": \"current\",\r\n  \"accessLevel\": \"documents\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/Patient/{{patient_9_id}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"Patient",
+												"{{patient_9_id}}"
+											]
+										},
+										"description": "## Overview\n\nRequest a change to the permission a patient has for their medical\nrecord or services provided by the GP practice.\n\nOnce you submit a request, it waits in a queue to be processed by a\nhealthcare worker. Exactly when this will happen is unpredictable.\n\nThe response to getting patient permissions contains information on\npending requests. Once the request is processed it is no longer\nincluded in pending requests.\n\nIf you like, you can share this information with the patient to help\nset their expectations.\n\n## Use cases\n\nUse cases covered by this endpoint include the patient requesting:\n\n* additional access to the appointments\n* additional access to the prescriptions\n* additional access to their current medical record\n* detailed coded record access to their historical medical record\n\n## Request workflow\n\nWhen a request is made, if it is accepted, it is added to the GP\nsystem's workflow and processed at some point in the future. Responses\nto these requests have a state of pending.\n\nRejected requests are not added to the GP system's\nworkflow. The message included in the response to a rejected request\nexplains the reason for the rejection. This should be displayed to\nthe patient.\n\n## Request handling\n\nIf a request is a duplicate, it is deduplicated by\nthe GP system, with the original request being preserved.\n\nIf multiple requests are made (and accepted) they are combined\nwithin the workflow and reviewed together by a healthcare worker.\n"
+									},
+									"response": []
+								},
+								{
+									"name": "Error: Patient id does not match any on recorda non-Regular/GMS patient (i.e. the patient's registered practice is somewhere else) - 404 PATIENT_NOT_FOUND",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var jsonData = pm.response.json();\r",
+													"\r",
+													"//Verify the response status code\r",
+													"pm.test(\"GIVEN I send an incorrect request, WHEN I send the request, THEN the status code response is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Correlation-ID\r",
+													"pm.test(\"GIVEN I provide an X-Correlation-ID in the header, WHEN I send the request, THEN the same X-Correlation-ID is returned in the response header\", function () {\r",
+													"    var XCorrelationID = pm.variables.get(\"X-Correlation-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Correlation-ID\")).to.eql(XCorrelationID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header X-Request-ID\r",
+													"pm.test(\"GIVEN I provide an X-Request-ID in the header, WHEN I send the request, THEN the same X-Request-ID is returned in the response header\", function () {\r",
+													"    var XRequestID = pm.variables.get(\"X-Request-ID\");\r",
+													"    pm.expect(pm.response.headers.get(\"X-Request-ID\")).to.eql(XRequestID);\r",
+													"});\r",
+													"\r",
+													"//Verify response header content-type\r",
+													"pm.test(\"GIVEN I send a request, WHEN the response is returned, THEN the content-type in the header is set to 'application/json'\", () => {\r",
+													"    pm.expect(pm.response.headers.get('CONTENT-TYPE')).to.eql('application/json')\r",
+													"});\r",
+													"\r",
+													"//Verify response schema\r",
+													"pm.test(\"GIVEN I send a MedicationRequest with an ID that doesn't exist, WHEN the response is returned, THEN the json error response corresponds to the required MedicationRequest schema\", () => {\r",
+													"    var schema = {\r",
+													"        \"type\": \"object\",\r",
+													"        \"properties\": {\r",
+													"            \"resourceType\": {\r",
+													"                \"type\": \"string\",\r",
+													"                \"const\": \"OperationOutcome\"\r",
+													"            },\r",
+													"            \"id\": {\r",
+													"                \"type\": \"string\"\r",
+													"            },\r",
+													"            \"meta\": {\r",
+													"                \"type\": \"object\",\r",
+													"                \"properties\": {\r",
+													"                    \"profile\": {\r",
+													"                        \"type\": \"array\",\r",
+													"                        \"minItems\": 1,\r",
+													"                        \"maxItems\": 1,\r",
+													"                        \"items\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"const\": \"https://fhir.hl7.org.uk/StructureDefinition/UKCore-OperationOutcome\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\"profile\"]\r",
+													"            },\r",
+													"            \"issue\": {\r",
+													"                \"type\": \"array\",\r",
+													"                \"items\": {\r",
+													"                    \"properties\": {\r",
+													"                        \"id\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"severity\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"fatal\",\r",
+													"                                \"error\",\r",
+													"                                \"warning\",\r",
+													"                                \"information\"\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"code\": {\r",
+													"                            \"type\": \"string\",\r",
+													"                            \"enum\": [\r",
+													"                                \"invalid\",\r",
+													"                                \"structure\",\r",
+													"                                \"required\",\r",
+													"                                \"value\",\r",
+													"                                \"invariant\",\r",
+													"                                \"security\",\r",
+													"                                \"login\",\r",
+													"                                \"unknown\",\r",
+													"                                \"expired\",\r",
+													"                                \"forbidden\",\r",
+													"                                \"suppressed\",\r",
+													"                                \"processing\",\r",
+													"                                \"not-supported\",\r",
+													"                                \"duplicate\",\r",
+													"                                \"not-found\",\r",
+													"                                \"too-long\",\r",
+													"                                \"code-invalid\",\r",
+													"                                \"extension\",\r",
+													"                                \"too-costly\",\r",
+													"                                \"business-rule\",\r",
+													"                                \"conflict\",\r",
+													"                                \"incomplete\",\r",
+													"                                \"transient\",\r",
+													"                                \"lock-error\",\r",
+													"                                \"no-store\",\r",
+													"                                \"exception\",\r",
+													"                                \"timeout\",\r",
+													"                                \"throttled\",\r",
+													"                                \"informational\",\r",
+													"                            ]\r",
+													"                        },\r",
+													"                        \"details\": {\r",
+													"                            \"type\": \"object\",\r",
+													"                            \"properties\": {\r",
+													"                                \"coding\": {\r",
+													"                                    \"type\": \"array\",\r",
+													"                                    \"minItems\": 1,\r",
+													"                                    \"items\": {\r",
+													"                                        \"properties\": {\r",
+													"                                            \"system\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            },\r",
+													"                                            \"code\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                                \"const\": \"UNSUPPORTED_VALUE\",\r",
+													"                                            },\r",
+													"                                            \"display\": {\r",
+													"                                                \"type\": \"string\",\r",
+													"                                            }\r",
+													"                                        },\r",
+													"                                        \"required\": [\r",
+													"                                            \"system\",\r",
+													"                                            \"code\",\r",
+													"                                            \"display\"\r",
+													"                                        ]\r",
+													"                                    }\r",
+													"                                },\r",
+													"                            },\r",
+													"                        },\r",
+													"                        \"diagnostics\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        },\r",
+													"                        \"expression\": {\r",
+													"                            \"type\": \"string\"\r",
+													"                        }\r",
+													"                    }\r",
+													"                },\r",
+													"                \"required\": [\r",
+													"                    \"severity\",\r",
+													"                    \"code\",\r",
+													"                ]\r",
+													"            }\r",
+													"        },\r",
+													"        \"required\": [\r",
+													"            \"resourceType\",\r",
+													"            \"meta\",\r",
+													"            \"issue\"\r",
+													"        ]\r",
+													"    }\r",
+													"    pm.response.to.have.jsonSchema(schema);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "{{X-Request-ID}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "{{X-Correlation-ID}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"permissionType\": \"medicalRecord\",\r\n  \"medicalRecordType\": \"current\",\r\n  \"accessLevel\": \"documents\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/Patient/1234567082",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"Patient",
+												"1234567082"
 											]
 										},
 										"description": "## Overview\n\nRequest a change to the permission a patient has for their medical\nrecord or services provided by the GP practice.\n\nOnce you submit a request, it waits in a queue to be processed by a\nhealthcare worker. Exactly when this will happen is unpredictable.\n\nThe response to getting patient permissions contains information on\npending requests. Once the request is processed it is no longer\nincluded in pending requests.\n\nIf you like, you can share this information with the patient to help\nset their expectations.\n\n## Use cases\n\nUse cases covered by this endpoint include the patient requesting:\n\n* additional access to the appointments\n* additional access to the prescriptions\n* additional access to their current medical record\n* detailed coded record access to their historical medical record\n\n## Request workflow\n\nWhen a request is made, if it is accepted, it is added to the GP\nsystem's workflow and processed at some point in the future. Responses\nto these requests have a state of pending.\n\nRejected requests are not added to the GP system's\nworkflow. The message included in the response to a rejected request\nexplains the reason for the rejection. This should be displayed to\nthe patient.\n\n## Request handling\n\nIf a request is a duplicate, it is deduplicated by\nthe GP system, with the original request being preserved.\n\nIf multiple requests are made (and accepted) they are combined\nwithin the workflow and reviewed together by a healthcare worker.\n"
@@ -9129,47 +10188,57 @@
 		},
 		{
 			"key": "X-Correlation-ID",
-			"value": "",
+			"value": "11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA",
 			"type": "string"
 		},
 		{
 			"key": "X-Request-ID",
-			"value": "",
+			"value": "60E0B220-8136-4CA5-AE46-1D97EF59D068",
 			"type": "string"
 		},
 		{
 			"key": "patient_1_id",
-			"value": "",
+			"value": "PleaseReplaceWithActualPatient_1_idinYourDb",
 			"type": "string"
 		},
 		{
 			"key": "patient_2_id",
-			"value": "",
+			"value": "PleaseReplaceWithActualPatient_2_idinYourDb",
 			"type": "string"
 		},
 		{
 			"key": "patient_3_id",
-			"value": "",
+			"value": "PleaseReplaceWithActualPatient_3_idinYourDb",
 			"type": "string"
 		},
 		{
 			"key": "patient_4_id",
-			"value": "",
+			"value": "PleaseReplaceWithActualPatient_4_idinYourDb",
 			"type": "string"
 		},
 		{
 			"key": "patient_5_id",
-			"value": "",
+			"value": "PleaseReplaceWithActualPatient_5_idinYourDb",
 			"type": "string"
 		},
 		{
 			"key": "patient_6_id",
-			"value": "",
+			"value": "PleaseReplaceWithActualPatient_6_idinYourDb",
 			"type": "string"
 		},
 		{
 			"key": "patient_7_id",
-			"value": "",
+			"value": "PleaseReplaceWithActualPatient_7_idinYourDb",
+			"type": "string"
+		},
+		{
+			"key": "patient_8_id",
+			"value": "PleaseReplaceWithActualPatient_8_idinYourDb",
+			"type": "string"
+		},
+		{
+			"key": "patient_9_id",
+			"value": "PleaseReplaceWithActualPatient_9_idinYourDb",
 			"type": "string"
 		}
 	]
