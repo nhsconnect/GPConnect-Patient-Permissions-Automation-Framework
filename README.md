@@ -9,3 +9,4 @@ changes are updated in collection and uploaded latest version2.1
 08/12/23- As per Emile's email(dt. 03/12/23)-collection has been updated and uploaded latest version.
 15/12/23- As per Emile's email(dt. 11/12/23)-collection has been updated and uploaded latest version.
 02/04/24- As per Emile's email(dt. 01/04/24)-collection has been updated and uploaded latest version.
+04/07/24 - As per Emile's email(dt. 29/06/24)-collection has been updated and uploaded latest version.
